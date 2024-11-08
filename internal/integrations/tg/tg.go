@@ -58,29 +58,26 @@ func NewTelegramClient(
 			NoUpdates:      true,
 			Logger:         logger,
 		}),
-
 	}
 
 	return sessionStorageSvc, nil
 }
 
 func (c *Client) Validate(ctx context.Context) error {
-	return c.raw.Run(ctx, func(ctx context.Context) error {
-		err := c.raw.Ping(ctx)
-		if err != nil {
-			return err
-		}
-		status, err := c.raw.Auth().Status(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to check auth status :%w", err)
-		}
+	err := c.raw.Ping(ctx)
+	if err != nil {
+		return err
+	}
+	status, err := c.raw.Auth().Status(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check auth status :%w", err)
+	}
 
-		if !status.Authorized {
-			return ErrAuthExp
-		}
+	if !status.Authorized {
+		return ErrAuthExp
+	}
 
-		return nil
-	})
+	return nil
 }
 
 func (c *Client) SendCode(ctx context.Context) error {
