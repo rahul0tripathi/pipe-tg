@@ -12,7 +12,6 @@ import (
 	"github.com/rahul0tripathi/pipetg/internal/integrations/tg"
 	"github.com/rahul0tripathi/pipetg/internal/services"
 	"github.com/rahul0tripathi/pipetg/pkg/httpserver"
-	"go.uber.org/zap"
 )
 
 func Run() error {
@@ -24,12 +23,7 @@ func Run() error {
 		return err
 	}
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		return err
-	}
-
-	cli, err := tg.NewTelegramClient(cfg.UID, cfg.AppID, cfg.AppHash, cfg.SessionConfig, logger)
+	cli, err := tg.NewTelegramClient(cfg.UID, cfg.AppID, cfg.AppHash, cfg.SessionConfig)
 	if err != nil {
 		return err
 	}

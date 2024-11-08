@@ -20,11 +20,12 @@ func NewMessageLogger(c *wrapper.Client) *MessageLogger {
 
 func (m *MessageLogger) All(ctx context.Context) (interface{}, error) {
 	out := make([]entity.PipeMessage, 0)
-	err := m.tg.Raw().Run(ctx, func(ctx context.Context) error {
-		if err := m.tg.Validate(ctx); err != nil {
+	client := m.tg.Raw()
+	err := client.Run(ctx, func(ctx context.Context) error {
+		if err := m.tg.Validate(ctx, client); err != nil {
 			return err
 		}
-		api := m.tg.Raw().API()
+		api := client.API()
 		self, err := api.UsersGetUsers(ctx, []tg.InputUserClass{
 			&tg.InputUserSelf{},
 		})

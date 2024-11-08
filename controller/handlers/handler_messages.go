@@ -10,7 +10,6 @@ func (h *Handler) MakeFetchAllMessages(svc MessageLogger) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		msg, err := svc.All(c.Request().Context())
-
 		if err != nil {
 			return err
 		}
