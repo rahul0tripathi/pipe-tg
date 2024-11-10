@@ -96,13 +96,15 @@ func (c *Client) SendCode(ctx context.Context, client *telegram.Client) error {
 }
 
 func (c *Client) AuthenticateWithCode(ctx context.Context, code string, client *telegram.Client) error {
-	_, err := client.Auth().SignIn(ctx, c.uid, code, c.pendingCodeHash)
-	if err != nil {
-		return err
-	}
+	return client.Run(ctx, func(ctx context.Context) error {
+		_, err := client.Auth().SignIn(ctx, c.uid, code, c.pendingCodeHash)
+		if err != nil {
+			return err
+		}
 
-	c.pendingCodeHash = ""
-	return nil
+		c.pendingCodeHash = ""
+		return nil
+	})
 }
 
 func (c *Client) Raw() *telegram.Client {
@@ -112,5 +114,14 @@ func (c *Client) Raw() *telegram.Client {
 		DialTimeout:    time.Second * 10,
 		NoUpdates:      true,
 		Logger:         c.logger,
+	})
+}
+
+func (c *Client) RawWithoutSession() *telegram.Client {
+	return telegram.NewClient(c.appID, c.appHash, telegram.Options{
+		MaxRetries:  5,
+		DialTimeout: time.Second * 10,
+		NoUpdates:   true,
+		Logger:      c.logger,
 	})
 }

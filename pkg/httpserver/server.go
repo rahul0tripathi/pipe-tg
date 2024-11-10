@@ -43,6 +43,7 @@ func NewServerWithMiddlewares(address string) *Server {
 		MakeCorsMiddleware(),
 		MakeLoggerMiddleware(),
 		RecoverMiddleware(),
+		makeErrorCatcherMiddleware(),
 	)
 
 	return &Server{
