@@ -11,7 +11,7 @@ func Router(
 	router httpserver.Router,
 	wrapper *tg.Client,
 	authFlowService *services.AuthFlowService,
-	messagesService *services.MessageLogger,
+	messagesService *services.Scraper,
 ) {
 
 	handler := handlers.New(wrapper)
@@ -22,8 +22,8 @@ func Router(
 		auth.POST("/submit", handler.MakeHandleSubmitCode(authFlowService))
 	}
 
-	messages := base.Group("/messages")
+	messages := base.Group("/scheduler")
 	{
-		messages.GET("/", handler.MakeFetchAllMessages(messagesService))
+		messages.GET("/scrape", handler.MakeFetchAllMessages(messagesService))
 	}
 }

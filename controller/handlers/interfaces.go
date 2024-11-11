@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+
+	"github.com/rahul0tripathi/pipetg/entity"
 )
 
 type AuthFlowSvc interface {
@@ -9,6 +11,6 @@ type AuthFlowSvc interface {
 	SubmitCode(ctx context.Context, code string) error
 }
 
-type MessageLogger interface {
-	All(ctx context.Context) (interface{}, error)
+type Scraper interface {
+	Run(ctx context.Context) ([]entity.PipeMessage, error)
 }

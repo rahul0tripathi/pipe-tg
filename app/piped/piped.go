@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/rahul0tripathi/pipetg/config"
 	"github.com/rahul0tripathi/pipetg/controller"
@@ -28,12 +29,17 @@ func Run() error {
 		return err
 	}
 
+	scrapeWindow, err := time.ParseDuration(cfg.Window)
+	if err != nil {
+		return err
+	}
+
 	server := httpserver.NewServerWithMiddlewares(fmt.Sprintf(":%s", cfg.Port))
 	controller.Router(
 		server.Router(),
 		cli,
 		services.NewAuthFlowService(cli),
-		services.NewMessageLogger(cli),
+		services.NewScraper(cli, scrapeWindow),
 	)
 	server.Start()
 	defer server.Shutdown()

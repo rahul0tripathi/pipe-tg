@@ -13,6 +13,7 @@ type Config struct {
 	AppHash       string `json:"appHash" envconfig:"APP_HASH"`
 	SessionConfig string `json:"sessionConfig" envconfig:"SESSION_CONFIG"`
 	Port          string `json:"port" envconfig:"PORT"`
+	Window        string `json:"window" envconfig:"WINDOW"`
 }
 
 type Option func(*envConfig)
