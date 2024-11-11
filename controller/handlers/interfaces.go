@@ -1,6 +1,8 @@
 package handlers
 
-import "context"
+import (
+	"context"
+)
 
 type AuthFlowSvc interface {
 	RequestNewCode(ctx context.Context) error

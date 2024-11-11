@@ -2,14 +2,18 @@ package tg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/auth"
 	"github.com/gotd/td/tg"
+	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
+
+type TgConn struct{}
 
 type InjectedSessionStorage struct {
 	config []byte
@@ -41,6 +45,7 @@ type Client struct {
 	pendingCodeHash string
 	ctx             context.Context
 	logger          *zap.Logger
+	isAuth          bool
 }
 
 func NewTelegramClient(
@@ -84,27 +89,23 @@ func (c *Client) Validate(ctx context.Context, client *telegram.Client) error {
 }
 
 func (c *Client) SendCode(ctx context.Context, client *telegram.Client) error {
-	return client.Run(ctx, func(ctx context.Context) error {
-		resp, err := client.Auth().SendCode(ctx, c.uid, auth.SendCodeOptions{})
-		if err != nil {
-			return err
-		}
+	resp, err := client.Auth().SendCode(ctx, c.uid, auth.SendCodeOptions{})
+	if err != nil {
+		return err
+	}
 
-		c.pendingCodeHash = resp.(*tg.AuthSentCode).PhoneCodeHash
-		return nil
-	})
+	c.pendingCodeHash = resp.(*tg.AuthSentCode).PhoneCodeHash
+	return nil
 }
 
 func (c *Client) AuthenticateWithCode(ctx context.Context, code string, client *telegram.Client) error {
-	return client.Run(ctx, func(ctx context.Context) error {
-		_, err := client.Auth().SignIn(ctx, c.uid, code, c.pendingCodeHash)
-		if err != nil {
-			return err
-		}
+	_, err := client.Auth().SignIn(ctx, c.uid, code, c.pendingCodeHash)
+	if err != nil {
+		return err
+	}
 
-		c.pendingCodeHash = ""
-		return nil
-	})
+	c.pendingCodeHash = ""
+	return nil
 }
 
 func (c *Client) Raw() *telegram.Client {
@@ -124,4 +125,29 @@ func (c *Client) RawWithoutSession() *telegram.Client {
 		NoUpdates:   true,
 		Logger:      c.logger,
 	})
+}
+
+func (c *Client) WithContext(e echo.Context, exec func(ctx context.Context) error) error {
+	conn := c.Raw()
+	return conn.Run(e.Request().Context(), func(ctx context.Context) error {
+		if err := c.Validate(ctx, conn); err != nil {
+			return err
+		}
+
+		ctx = context.WithValue(ctx, TgConn{}, conn)
+		return exec(ctx)
+	})
+}
+
+func (c *Client) GetTgConnFromCtx(ctx context.Context) (*telegram.Client, error) {
+	_rawConn := ctx.Value(TgConn{})
+	if _rawConn == nil {
+		return c.Raw(), nil
+	}
+	conn, ok := _rawConn.(*telegram.Client)
+	if !ok {
+		return nil, errors.New("failed to convert ctx val to *telegram.Client")
+	}
+
+	return conn, nil
 }

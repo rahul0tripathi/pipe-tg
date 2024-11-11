@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -8,13 +9,14 @@ import (
 
 func (h *Handler) MakeHandleSendCode(svc AuthFlowSvc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		return h.wrapper.WithContext(c, func(ctx context.Context) error {
+			err := svc.RequestNewCode(ctx)
+			if err != nil {
+				return err
+			}
 
-		err := svc.RequestNewCode(c.Request().Context())
-		if err != nil {
-			return err
-		}
-
-		return responseJSON(c, http.StatusOK, "processing")
+			return responseJSON(c, http.StatusOK, "processing")
+		})
 	}
 }
 
@@ -24,16 +26,18 @@ type submitCodeRequest struct {
 
 func (h *Handler) MakeHandleSubmitCode(svc AuthFlowSvc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		req := &submitCodeRequest{}
-		if err := c.Bind(req); err != nil {
-			return err
-		}
+		return h.wrapper.WithContext(c, func(ctx context.Context) error {
+			req := &submitCodeRequest{}
+			if err := c.Bind(req); err != nil {
+				return err
+			}
 
-		err := svc.SubmitCode(c.Request().Context(), req.Code)
-		if err != nil {
-			return err
-		}
+			err := svc.SubmitCode(ctx, req.Code)
+			if err != nil {
+				return err
+			}
 
-		return responseJSON(c, http.StatusOK, "authenticated")
+			return responseJSON(c, http.StatusOK, "authenticated")
+		})
 	}
 }

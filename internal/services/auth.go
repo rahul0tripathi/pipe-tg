@@ -15,9 +15,18 @@ func NewAuthFlowService(c *tg.Client) *AuthFlowService {
 }
 
 func (a *AuthFlowService) RequestNewCode(ctx context.Context) error {
-	return a.tg.SendCode(ctx, a.tg.Raw())
+	conn, err := a.tg.GetTgConnFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+	return a.tg.SendCode(ctx, conn)
 }
 
 func (a *AuthFlowService) SubmitCode(ctx context.Context, code string) error {
-	return a.tg.AuthenticateWithCode(ctx, code, a.tg.Raw())
+	conn, err := a.tg.GetTgConnFromCtx(ctx)
+	if err != nil {
+		return err
+	}
+
+	return a.tg.AuthenticateWithCode(ctx, code, conn)
 }

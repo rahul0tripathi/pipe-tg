@@ -31,6 +31,7 @@ func Run() error {
 	server := httpserver.NewServerWithMiddlewares(fmt.Sprintf(":%s", cfg.Port))
 	controller.Router(
 		server.Router(),
+		cli,
 		services.NewAuthFlowService(cli),
 		services.NewMessageLogger(cli),
 	)
