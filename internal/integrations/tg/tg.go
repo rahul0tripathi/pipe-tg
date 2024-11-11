@@ -126,10 +126,9 @@ func (c *Client) RawWithoutSession() *telegram.Client {
 		Logger:      c.logger,
 	})
 }
-
-func (c *Client) WithContext(e echo.Context, exec func(ctx context.Context) error) error {
+func (c *Client) WithContext(ctx context.Context, exec func(ctx context.Context) error) error {
 	conn := c.Raw()
-	return conn.Run(e.Request().Context(), func(ctx context.Context) error {
+	return conn.Run(ctx, func(ctx context.Context) error {
 		if err := c.Validate(ctx, conn); err != nil {
 			return err
 		}
@@ -137,6 +136,10 @@ func (c *Client) WithContext(e echo.Context, exec func(ctx context.Context) erro
 		ctx = context.WithValue(ctx, TgConn{}, conn)
 		return exec(ctx)
 	})
+}
+
+func (c *Client) WithEchoContext(e echo.Context, exec func(ctx context.Context) error) error {
+	return c.WithContext(e.Request().Context(), exec)
 }
 
 func (c *Client) GetTgConnFromCtx(ctx context.Context) (*telegram.Client, error) {

@@ -24,6 +24,6 @@ func Router(
 
 	messages := base.Group("/scheduler")
 	{
-		messages.GET("/scrape", handler.MakeFetchAllMessages(messagesService))
+		messages.GET("/scrape", handler.MakeScrapeMessagesHandler(messagesService))
 	}
 }

@@ -23,7 +23,6 @@ type Scraper struct {
 }
 
 func NewScraper(c *wrapper.Client, window time.Duration) *Scraper {
-	fmt.Println(window.String())
 	return &Scraper{tg: c, window: window}
 }
 
