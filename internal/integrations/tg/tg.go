@@ -138,6 +138,18 @@ func (c *Client) WithContext(ctx context.Context, exec func(ctx context.Context)
 	})
 }
 
+func (c *Client) WithUnAuthEchoContext(e echo.Context, exec func(ctx context.Context) error) error {
+	return c.WithUnAuthContext(e.Request().Context(), exec)
+}
+
+func (c *Client) WithUnAuthContext(ctx context.Context, exec func(ctx context.Context) error) error {
+	conn := c.RawWithoutSession()
+	return conn.Run(ctx, func(ctx context.Context) error {
+		ctx = context.WithValue(ctx, TgConn{}, conn)
+		return exec(ctx)
+	})
+}
+
 func (c *Client) WithEchoContext(e echo.Context, exec func(ctx context.Context) error) error {
 	return c.WithContext(e.Request().Context(), exec)
 }
