@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	app "github.com/rahul0tripathi/pipetg/app/cli"
 	"github.com/rahul0tripathi/pipetg/config"
 	"github.com/rahul0tripathi/pipetg/controller"
 	"github.com/rahul0tripathi/pipetg/internal/integrations"
@@ -144,4 +145,23 @@ func Run() error {
 
 	wg.Wait()
 	return nil
+}
+
+func RunCLI(command string) error {
+	cfg, err := config.NewConfigFromEnv()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	client, err := tg.NewTelegramClient(cfg.UID, cfg.AppID, cfg.AppHash, cfg.SessionConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create telegram client: %w", err)
+	}
+
+	switch command {
+	case "auth":
+		return app.RunAuth(client)
+	default:
+		return fmt.Errorf("unknown command: %s", command)
+	}
 }

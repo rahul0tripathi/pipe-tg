@@ -33,7 +33,8 @@ func (s *InjectedSessionStorage) LoadSession(_ context.Context) ([]byte, error) 
 }
 
 func (s *InjectedSessionStorage) StoreSession(_ context.Context, data []byte) error {
-	s.config = data
+	s.config = make([]byte, len(data))
+	copy(s.config, data)
 	return nil
 }
 
@@ -43,7 +44,6 @@ type Client struct {
 	appID           int
 	appHash         string
 	pendingCodeHash string
-	ctx             context.Context
 	logger          *zap.Logger
 	isAuth          bool
 }
@@ -118,14 +118,6 @@ func (c *Client) Raw() *telegram.Client {
 	})
 }
 
-func (c *Client) RawWithoutSession() *telegram.Client {
-	return telegram.NewClient(c.appID, c.appHash, telegram.Options{
-		MaxRetries:  5,
-		DialTimeout: time.Second * 10,
-		NoUpdates:   true,
-		Logger:      c.logger,
-	})
-}
 func (c *Client) WithContext(ctx context.Context, exec func(ctx context.Context) error) error {
 	conn := c.Raw()
 	return conn.Run(ctx, func(ctx context.Context) error {
@@ -138,13 +130,14 @@ func (c *Client) WithContext(ctx context.Context, exec func(ctx context.Context)
 	})
 }
 
-func (c *Client) WithUnAuthEchoContext(e echo.Context, exec func(ctx context.Context) error) error {
-	return c.WithUnAuthContext(e.Request().Context(), exec)
+func (c *Client) WithUncheckedEchoContext(e echo.Context, exec func(ctx context.Context) error) error {
+	return c.WithUncheckedContext(e.Request().Context(), exec)
 }
 
-func (c *Client) WithUnAuthContext(ctx context.Context, exec func(ctx context.Context) error) error {
-	conn := c.RawWithoutSession()
+func (c *Client) WithUncheckedContext(ctx context.Context, exec func(ctx context.Context) error) error {
+	conn := c.Raw()
 	return conn.Run(ctx, func(ctx context.Context) error {
+
 		ctx = context.WithValue(ctx, TgConn{}, conn)
 		return exec(ctx)
 	})
@@ -165,4 +158,13 @@ func (c *Client) GetTgConnFromCtx(ctx context.Context) (*telegram.Client, error)
 	}
 
 	return conn, nil
+}
+
+func (c *Client) GetSessionConfig() (string, error) {
+	sessionData, err := c.session.LoadSession(nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to load session: %w", err)
+	}
+
+	return string(sessionData), nil
 }

@@ -9,7 +9,7 @@ import (
 
 func (h *Handler) MakeHandleSendCode(svc AuthFlowSvc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		return h.wrapper.WithUnAuthEchoContext(c, func(ctx context.Context) error {
+		return h.wrapper.WithUncheckedEchoContext(c, func(ctx context.Context) error {
 			err := svc.RequestNewCode(ctx)
 			if err != nil {
 				return err
@@ -26,7 +26,7 @@ type submitCodeRequest struct {
 
 func (h *Handler) MakeHandleSubmitCode(svc AuthFlowSvc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		return h.wrapper.WithUnAuthEchoContext(c, func(ctx context.Context) error {
+		return h.wrapper.WithUncheckedEchoContext(c, func(ctx context.Context) error {
 			req := &submitCodeRequest{}
 			if err := c.Bind(req); err != nil {
 				return err
